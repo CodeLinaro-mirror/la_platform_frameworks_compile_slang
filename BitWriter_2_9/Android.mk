@@ -16,7 +16,7 @@ include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES := $(bitcode_writer_2_9_SRC_FILES)
 
-LOCAL_MODULE:= libLLVMBitWriter_2_9
+LOCAL_MODULE:= lib${LLVM_VER}LLVMBitWriter_2_9
 
 LOCAL_MODULE_TAGS := optional
 
