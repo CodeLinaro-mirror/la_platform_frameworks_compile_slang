@@ -20,6 +20,14 @@ ifeq ($(TARGET_BUILD_APPS),)
 LOCAL_PATH := $(call my-dir)
 
 local_cflags_for_slang := -Wno-sign-promo -Wall -Wno-unused-parameter -Werror
+
+LLVM_VER :=
+ifeq ($(BOARD_USE_QCOM_LLVM_CLANG_RS),true)
+	LLVM_VER := RS
+	local_cflags_for_slang += -DQCOM_LLVM
+endif
+
+
 ifneq ($(TARGET_BUILD_VARIANT),eng)
 local_cflags_for_slang += -D__DISABLE_ASSERTS
 endif
@@ -36,53 +44,53 @@ endif
 local_cflags_for_slang += -DRS_VERSION=$(RS_VERSION)
 
 static_libraries_needed_by_slang := \
-	libLLVMLinker \
-	libLLVMipo \
-	libLLVMBitWriter \
-	libLLVMBitWriter_2_9 \
-	libLLVMBitWriter_2_9_func \
-	libLLVMBitReader \
-	libLLVMARMCodeGen \
-	libLLVMARMAsmPrinter \
-	libLLVMARMInfo \
-	libLLVMARMDesc \
-	libLLVMX86CodeGen \
-	libLLVMX86Info \
-	libLLVMX86Desc \
-	libLLVMX86AsmPrinter \
-	libLLVMX86Utils \
-	libLLVMAsmPrinter \
-	libLLVMSelectionDAG \
-	libLLVMCodeGen \
-	libLLVMScalarOpts \
-	libLLVMInstCombine \
-	libLLVMTransformUtils \
-	libLLVMInstrumentation \
-	libLLVMipa \
-	libLLVMAnalysis \
-	libLLVMTarget \
-	libLLVMMC \
-	libLLVMMCParser \
-	libLLVMCore \
-	libclangParse \
-	libclangSema \
-	libclangAnalysis \
-	libclangCodeGen \
-	libclangAST \
-	libclangLex \
-	libclangEdit \
-	libclangFrontend \
-	libclangBasic \
-	libLLVMSupport \
-	libLLVMVectorize
+	lib${LLVM_VER}LLVMLinker \
+	lib${LLVM_VER}LLVMipo \
+	lib${LLVM_VER}LLVMBitWriter \
+	lib${LLVM_VER}LLVMBitWriter_2_9 \
+	lib${LLVM_VER}LLVMBitWriter_2_9_func \
+	lib${LLVM_VER}LLVMBitReader \
+	lib${LLVM_VER}LLVMARMCodeGen \
+	lib${LLVM_VER}LLVMARMAsmPrinter \
+	lib${LLVM_VER}LLVMARMInfo \
+	lib${LLVM_VER}LLVMARMDesc \
+	lib${LLVM_VER}LLVMX86CodeGen \
+	lib${LLVM_VER}LLVMX86Info \
+	lib${LLVM_VER}LLVMX86Desc \
+	lib${LLVM_VER}LLVMX86AsmPrinter \
+	lib${LLVM_VER}LLVMX86Utils \
+	lib${LLVM_VER}LLVMAsmPrinter \
+	lib${LLVM_VER}LLVMSelectionDAG \
+	lib${LLVM_VER}LLVMCodeGen \
+	lib${LLVM_VER}LLVMScalarOpts \
+	lib${LLVM_VER}LLVMInstCombine \
+	lib${LLVM_VER}LLVMTransformUtils \
+	lib${LLVM_VER}LLVMInstrumentation \
+	lib${LLVM_VER}LLVMipa \
+	lib${LLVM_VER}LLVMAnalysis \
+	lib${LLVM_VER}LLVMTarget \
+	lib${LLVM_VER}LLVMMC \
+	lib${LLVM_VER}LLVMMCParser \
+	lib${LLVM_VER}LLVMCore \
+	lib${LLVM_VER}clangParse \
+	lib${LLVM_VER}clangSema \
+	lib${LLVM_VER}clangAnalysis \
+	lib${LLVM_VER}clangCodeGen \
+	lib${LLVM_VER}clangAST \
+	lib${LLVM_VER}clangLex \
+	lib${LLVM_VER}clangEdit \
+	lib${LLVM_VER}clangFrontend \
+	lib${LLVM_VER}clangBasic \
+	lib${LLVM_VER}LLVMSupport \
+	lib${LLVM_VER}LLVMVectorize
 
 # Static library libslang for host
 # ========================================================
 include $(CLEAR_VARS)
 include $(CLEAR_TBLGEN_VARS)
 
-LLVM_ROOT_PATH := external/llvm
-CLANG_ROOT_PATH := external/clang
+LLVM_ROOT_PATH := $(call get_llvm_root_path)
+CLANG_ROOT_PATH := $(call get_clang_root_path)
 
 include $(CLANG_ROOT_PATH)/clang.mk
 
@@ -235,7 +243,7 @@ LOCAL_SRC_FILES :=	\
 	slang_rs_reflect_utils.cpp
 
 LOCAL_STATIC_LIBRARIES :=	\
-	libclangDriver libslang \
+	lib${LLVM_VER}clangDriver libslang \
 	$(static_libraries_needed_by_slang)
 
 ifeq ($(HOST_OS),windows)
@@ -249,7 +257,11 @@ intermediates := $(call local-intermediates-dir)
 LOCAL_GENERATED_SOURCES += $(intermediates)/RSCCOptions.inc
 $(intermediates)/RSCCOptions.inc: $(LOCAL_PATH)/RSCCOptions.td $(CLANG_ROOT_PATH)/include/clang/Driver/OptParser.td $(CLANG_TBLGEN)
 	@echo "Building Renderscript compiler (llvm-rs-cc) Option tables with tblgen"
+ifeq ($(BOARD_USE_QCOM_LLVM_CLANG_RS),true)
+	$(call transform-host-clangtd-to-out,opt-parser-defs)
+else
 	$(call transform-host-clang-td-to-out,opt-parser-defs)
+endif
 
 include frameworks/compile/slang/RSSpec.mk
 include $(CLANG_HOST_BUILD_MK)
