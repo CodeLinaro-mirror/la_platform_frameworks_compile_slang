@@ -76,7 +76,7 @@
 
 #include "rs_cc_options.h"
 
-#include "strip_unknown_attributes.h"
+#include "StripUnkAttr/strip_unknown_attributes_pass.h"
 
 namespace {
 class VersionInfoPass : public llvm::ModulePass {
@@ -605,7 +605,7 @@ void Backend::AnnotateFunction(clang::FunctionDecl *FD) {
       !Slang::IsLocInRSHeaderFile(FD->getLocation(), mSourceMgr)) {
     mRefCount.Init();
     mRefCount.SetDeclContext(FD);
-    mRefCount.Visit(FD->getBody());
+    mRefCount.HandleParamsAndLocals(FD);
   }
 }
 
